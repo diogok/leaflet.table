@@ -1,0 +1,66 @@
+
+.leaflet-control-table-container {
+  box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.65);
+  background-color: #fff;
+  border-radius: 4px;
+  padding: 4px;
+  max-width: 90vw;
+}
+
+.leaflet-control-table {
+  max-width: 100%;
+  display: block;
+  overflow-y: scroll;
+  overflow-x: scroll;
+  max-height: 30vh;
+}
+
+/*
+.leaflet-control-table tbody {
+  display: block;
+  max-height: 30vh;
+  overflow-x: scroll;
+}
+*/
+
+.leaflet-control-table th {
+  width: 200px;
+  border: 1px solid #aaa;
+  margin: 0;
+}
+
+.leaflet-control-table th input{
+  border: 1px #ddd solid;
+  padding: 2px;
+}
+
+.leaflet-control-table td>input {
+  width: 200px;
+  border: 1px #ddd solid;
+  margin: 0;
+  padding: 2px;
+  background-color: #eee;
+}
+
+.leaflet-control-table tr.leaflet-table-focus input {
+  background-color: #fff;
+}
+
+.leaflet-control-table tr.leaflet-table-focus input.leaflet-table-focus{
+  border: 1px #666 solid;
+  background-color: #efe;
+}
+
+.leaflet-control-table tbody tr {
+  display: table-row;
+}
+
+.leaflet-control-table tbody tr.leaflet-table-match {
+  display: table-row;
+}
+
+.leaflet-control-table tbody tr.leaflet-table-not-match {
+  display:none;
+}
+
+

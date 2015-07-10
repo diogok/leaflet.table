@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Leaflet with data table</title>
+
+  <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
+
+  <link rel="stylesheet" href="leaflet.table.css" />
+  <script src="leaflet.table.js" type="text/javascript"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    #map {
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="map">
+  </div>
+  
+  <script type="text/javascript">
+    // basic map
+    var map = L.map('map').setView([0, 0], 1);
+    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map);
+
+    var geojson = {
+      "type":'FeatureCollection',
+      "features": []
+    };
+
+    // some random data
+    for(var row=0;row<100;row++) {
+      var feature = {
+        type: "Feature",
+        properties: {
+          id: row
+        },
+        geometry: {
+          type: "Point",
+          coordinates: [ 0.0+(row/100) , 20.0+(row/100)  ]
+        }
+      };
+
+      for(var col=0;col<50;col++) {
+        feature.properties["col"+col] = "val "+row+":"+col;
+      }
+      geojson.features.push(feature);
+    }
+
+    var layer = L.geoJson(geojson,{
+      onEachFeature: function(feat,layer) {
+        layer.bindPopup('ID:'+feat.properties.id);
+      }
+    }).addTo(map);
+
+    var data = geojson.features.map(function(f) { return f.properties;});
+    var fields = ['id'];
+    for(var col=0;col<50;col++) {
+      fields.push("col"+col);
+    }
+
+    var table = L.control.geoJsonTable({
+      fields: fields,
+      data: data,
+      layer: layer,
+      id: 'id',
+      edit: false,
+    }).addTo(map);
+  </script>
+</body>
+</html>
