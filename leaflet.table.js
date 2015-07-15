@@ -3,6 +3,7 @@ L.control.Table = L.Control.extend({
 
     options: {
         position: 'bottomleft',
+        collapsed: true,
         handler: {}
     },
 
@@ -16,7 +17,7 @@ L.control.Table = L.Control.extend({
 
       for(var i=0;i<this.options.fields.length;i++) {
         var th    = L.DomUtil.create('th','');
-        var span = L.DomUtil.create('span','');
+        var span  = L.DomUtil.create('span','');
         span.innerHTML = this.options.fields[i];
         th.appendChild(span);
 
@@ -130,6 +131,7 @@ L.control.Table = L.Control.extend({
     },
 
     focus: function(id) {
+      this.expand();
       this.table.querySelector("input[rel='"+id+"']").focus();
     },
 
@@ -140,38 +142,57 @@ L.control.Table = L.Control.extend({
       }
     },
 
+    dismiss: function() {
+      this.inner.style.display='none';
+      this.toggle.innerHTML = '+';
+      this.options.collapsed=true;
+    },
+
+    expand: function() {
+      this.inner.style.display='block';
+      this.toggle.innerHTML = '-';
+      this.options.collapsed=false;
+    },
+
     onAdd: function(map) {
+      var that = this;
       var control = L.DomUtil.create('div','leaflet-control leaflet-control-table-container');
       var inner = L.DomUtil.create('div');
 
       var toggle  = L.DomUtil.create('button');
       toggle.innerHTML = "-";
       toggle.addEventListener('click',function(){
-        if(toggle.innerHTML=='+') {
-          inner.style.display='block';
-          toggle.innerHTML = '-';
+        if(that.options.collapsed) {
+          that.expand();
         } else {
-          inner.style.display='none';
-          toggle.innerHTML = '+';
+          that.dismiss();
         }
       },this);
+
+      this.toggle=toggle;
+      this.inner=inner;
       control.appendChild(toggle);
       control.appendChild(inner);
+
+      if(this.options.collapsed) {
+        this.dismiss();
+      }
 
       var table = L.DomUtil.create('table','leaflet-control-table');
       this.table = table;
 
       table.onmousedown = table.ondblclick = L.DomEvent.stopPropagation;
+      control.onmousedown = control.ondblclick = L.DomEvent.stopPropagation;
 
       table.innerHTML='<thead></thead><tbody></tbody>';
 
-      L.DomEvent.addListener(table, 'mouseover',function(){
+      L.DomEvent.addListener(control, 'mouseover',function(){
         map.dragging.disable();
         map.doubleClickZoom.disable();
         map.scrollWheelZoom.disable();
       },this);
 
-      L.DomEvent.addListener(table, 'mouseout',function(){
+      L.DomEvent.addListener(control, 'mouseout',function(){
         map.dragging.enable();
         map.doubleClickZoom.enable();
         map.scrollWheelZoom.enable();
@@ -189,36 +210,3 @@ L.control.Table = L.Control.extend({
 L.control.table = function (options) {
   return new L.control.Table(options);
 };
-
-L.control.geoJsonTable = function(overrides) {
-
-  var options = {
-    onFocus: function(id) {
-      overrides.layer.eachLayer(function(l){
-        if(l.feature.properties[overrides.id] == id) {
-          l._map.setView(l.getLatLng(),14)
-          /*
-          l._map.panTo(l.getLatLng());
-          l._map.setZoom(14);
-          */
-          l.openPopup();
-        }
-      });
-    }
-  };
-
-  for(var k in overrides) {
-    options[k] = overrides[k];
-  };
-
-  var table = new L.control.Table(options);
-
-  overrides.layer.eachLayer(function(l){
-    l.on('click',function(){
-        table.focus(l.feature.properties[overrides.id]);
-    });
-  });
-
-  return table;
-};
-
