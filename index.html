@@ -30,48 +30,54 @@
     var map = L.map('map').setView([0, 0], 1);
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map);
 
-    var geojson = {
-      "type":'FeatureCollection',
-      "features": []
-    };
-
-    // some random data
-    for(var row=0;row<100;row++) {
-      var feature = {
-        type: "Feature",
-        properties: {
-          id: row
-        },
-        geometry: {
-          type: "Point",
-          coordinates: [ 0.0+(row/100) , 20.0+(row/100)  ]
+    // generate random data
+    var tables = [];
+    // will make 5 tables
+    for(var table=0;table<5;table++) {
+      var layerGroup = new L.layerGroup();
+      // 100 rows per table
+      for(var row=0;row<100;row++) {
+        // semi-random point
+        var marker = new L.marker([ (table*10)+(row/100), (table*10)+20.0+(row/100)]);
+        // save data on marker
+        // must be in properties item
+        // picked an ID
+        marker.properties = {id:table+":"+row};
+        // 50 columns
+        for(var col=0;col<50;col++) {
+          marker.properties["col"+col] = "val "+row+":"+col;
         }
-      };
-
-      for(var col=0;col<50;col++) {
-        feature.properties["col"+col] = "val "+row+":"+col;
+        // create a simple popup for demo
+        marker.bindPopup('ID: '+marker.properties.id)
+        // add layer
+        layerGroup.addLayer(marker);
       }
-      geojson.features.push(feature);
+      // add to map
+      layerGroup.addTo(map);
+      layerGroup.name='layer'+table;
+
+      // push to add later to the table
+      tables.push(layerGroup); 
     }
 
-    var layer = L.geoJson(geojson,{
-      onEachFeature: function(feat,layer) {
-        layer.bindPopup('ID:'+feat.properties.id);
-      }
-    }).addTo(map);
 
-    var data = geojson.features.map(function(f) { return f.properties;});
+   // fields are static
     var fields = ['id'];
     for(var col=0;col<50;col++) {
       fields.push("col"+col);
     }
 
-    var table = L.control.geoJsonTable({
-      fields: fields,
-      data: data,
-      layer: layer,
-      id: 'id',
-      edit: false,
+    var table = L.control.table({
+      tables: tables.map(function(layer){
+        // each table schema
+        return {
+          name: layer.name,
+          layer: layer,
+          fields: fields,
+          id: 'id'
+        }
+      }),
+      edit: false, // non editable, for now
     }).addTo(map);
   </script>
 </body>
