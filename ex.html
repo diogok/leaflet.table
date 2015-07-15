@@ -67,6 +67,22 @@ marker3.properties = {
 var group = new L.layerGroup([marker1,marker2,marker3]);
 // or  group.addLayer(marker1)  and etc
 group.addTo(map);
+for(var i=0;i<10;i++) {
+  var markerx = new L.marker([50.53,22.23],{ });
+  markerx.bindPopup('ID: x'+i);
+  // populate the data to show on the table
+  markerx.properties = {
+    id: 'x'+i,
+    foo: "barx"+i,
+    fuz: "bazx"+i
+  };
+  group.addLayer(markerx);
+}
+
+var fields = ['id','foo','fuz'];
+for(var i=0;i<50;i++) {
+  fields.push("col"+i);
+}
 
 // and finally the table
 var table = L.control.table({
@@ -75,10 +91,10 @@ var table = L.control.table({
       name: "Group1", 
       layer: group, // layer of first table
       id: "id", // propertie that uniquely identifies each line
-      fields: ['id','foo','fuz'] // list of fields to display
+        fields: fields
     }
   ],
-  collapsed: true // to start collapsed
+  collapsed: false // to start expanded
 })
 
 table.addTo(map);
