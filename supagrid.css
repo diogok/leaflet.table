@@ -1,0 +1,71 @@
+
+.x-supagrid {
+  width: 98%;
+  height: 480px;
+  max-height: 480px;
+  max-width: 98%;
+  border: 1px #000 solid;
+  overflow-y: hidden;
+  overflow-x: scroll;
+  display: block;
+  table-layout: fixed;
+}
+
+.x-supagrid tr, .x-supagrid thead, .x-supagrid tbody {
+}
+
+.x-supagrid thead {
+}
+
+.x-supagrid thead th {
+  height: 50px;
+  text-align: center;
+}
+
+.x-supagrid tbody {
+  position: relative;
+  margin-top: 10px;
+}
+
+.x-supagrid tbody tr {
+}
+
+.x-supagrid tbody tr td {
+  width: 200px;
+  margin: 2px;
+  border: none;
+}
+
+.x-supagrid input {
+  border: 1px #ddd solid;
+  padding: 2px;
+  width: 100%;
+  display: block;
+  min-width: 200px;
+  box-sizing: padding-box;
+}
+
+.x-supagrid tbody input {
+  background-color: #ccc;
+}
+
+.x-supagrid tr.x-supagrid-focus input {
+  background-color: #efe;
+}
+
+.x-supagrid tr.x-supagrid-focus input.x-supagrid-focus{
+  border: 1px #666 solid;
+  background-color: #fff;
+}
+
+.x-supagrid tbody tr {
+  display: table-row;
+}
+
+.x-supagrid tbody tr.x-supagrid-match {
+  display: table-row;
+}
+
+.x-supagrid tbody tr.x-supagrid-not-match {
+  display: none;
+}

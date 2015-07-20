@@ -8,7 +8,9 @@
   <script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
 
   <!-- table CSS and JS -->
+  <link rel="stylesheet" href="supagrid.css" />
   <link rel="stylesheet" href="leaflet.table.css" />
+  <script src="supagrid.js" type="text/javascript"></script>
   <script src="leaflet.table.js" type="text/javascript"></script>
 
   <!-- basic style -->
@@ -91,7 +93,7 @@ var table = L.control.table({
       name: "Group1", 
       layer: group, // layer of first table
       id: "id", // propertie that uniquely identifies each line
-        fields: fields
+      fields: fields
     }
   ],
   collapsed: false // to start expanded

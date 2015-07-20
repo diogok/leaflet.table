@@ -8,99 +8,15 @@ L.control.Table = L.Control.extend({
         handler: {}
     },
 
-    createHeader: function(def,thead) {
-      var that = this;
-
-      var tr   = L.DomUtil.create('tr','');
-
-      for(var i=0;i<def.fields.length;i++) {
-        var th    = L.DomUtil.create('th','');
-        var span  = L.DomUtil.create('span','');
-        span.innerHTML = def.fields[i];
-        th.appendChild(span);
-
-        var input = L.DomUtil.create('input','leaflet-table-filter');
-        input.setAttribute("type","text");
-        input.setAttribute("name",def.fields[i]);
-        input.addEventListener('change',function(e){
-            var input = e.currentTarget;
-            that.filter(input.getAttribute('name'),input.value);
-        },false);
-
-        th.appendChild(input);
-        tr.appendChild(th);
-      }
-
-      thead.appendChild(tr);
-    },
-
-    createBody: function(def,tbody) {
-      var data = def.layer.getLayers().map(function(l){return l.properties;});
-      for(var i=0;i<data.length;i++) {
-        var tr = L.DomUtil.create('tr','leaflet-table-match');
-        for(var f=0;f<def.fields.length;f++) {
-          if(typeof data[i][ def.fields[f] ] == 'undefined') {
-            data[i][def.fields[f]] = '';
-          }
-          var field = def.fields[f];
-          var value = data[i][field];
-          var id    = data[i][def.id];
-          var input = this.createField(def,id,field,value);
-
-          var td = L.DomUtil.create('td','');
-          td.appendChild(input);
-          tr.appendChild(td);
-        }
-        tbody.appendChild(tr);
-      }
-    },
-
-    createField: function(def,id,field,value) {
-      var that = this;
-
-      var input = L.DomUtil.create('input','');
-      input.setAttribute("type","text");
-      input.setAttribute("name",field);
-      input.setAttribute("value",value);
-      input.setAttribute("rel",id);
-
-      if(typeof def.edit == 'undefined' || def.edit != true) {
-        input.setAttribute("readonly","readonly");
-      }
-
-      input.addEventListener('keydown',function(e){
-        var c=e.keyCode, k=e.key, input =e.target, prop=input.getAttribute('name');
-        if(c == 13 || c == 40 || k == 'Enter' || k == 'Down')  {
-          var nextTr=input.parentElement.parentElement.nextElementSibling;
-          if(nextTr) {
-            nextTr.querySelector("input[name="+prop+"]").focus();
-          }
-        } else if(c == 38 || k == 'Up') {
-          var previousTr=input.parentElement.parentElement.previousElementSibling;
-          if(previousTr) {
-            previousTr.querySelector("input[name="+prop+"]").focus();
-          }
-        }
-      },false);
-
-      input.addEventListener('focus',function(e){
-        var prevFocus = input.parentElement.parentElement.parentElement.querySelector("tr.leaflet-table-focus");
-        if(prevFocus != null) prevFocus.setAttribute('class','');
-        prevFocus = input.parentElement.parentElement.parentElement.querySelector("input.leaflet-table-focus");
-        if(prevFocus != null) prevFocus.setAttribute('class','');
-        input.parentElement.parentElement.setAttribute('class','leaflet-table-focus');
-        input.setAttribute('class','leaflet-table-focus');
-
-        that.onFocus(def,id);
-      });
-
-      return input;
-    },
-
     focus: function(def,id) {
       this.expand();
       this.activate(def.tid);
-      def.table.querySelector("input[rel='"+id+"']").focus();
+
+      for(var t=0;t<this.options.tables.length;t++) {
+        if(this.options.tables[t].tid == def.tid) {
+          this.options.tables[t].grid.focus(id);
+        }
+      }
     },
 
     onFocus: function(def,id) {
@@ -116,28 +32,6 @@ L.control.Table = L.Control.extend({
       });
     },
 
-    filter: function(def,field,val) {
-      var that = this;
-
-      var matches = def.table.querySelectorAll("tbody tr");
-      for(var i=0;i<matches.length;i++) {
-        matches[i].setAttribute('class','');
-      }
-
-      if(val.length >= 1) {
-        def.filters[field] =val; 
-      } else {
-        delete def.filters[field] ;
-      }
-
-      for(var f in def.filters) {
-        var matches = def.table.querySelectorAll("tbody input[name='"+f+"']:not([value*='"+def.filters[f]+"'])");
-        for(var i=0;i<matches.length;i++) {
-          matches[i].parentElement.parentElement.setAttribute('class','leaflet-table-not-match');
-        }
-      }
-    },
-
     dismiss: function() {
       this.inner.style.display='none';
       this.toggle.innerHTML = '+';
@@ -148,22 +42,35 @@ L.control.Table = L.Control.extend({
       this.inner.style.display='block';
       this.toggle.innerHTML = '-';
       this.options.collapsed=false;
+
+      var tid= this.switcher.options[this.switcher.selectedIndex].value;
+      for(var t=0;t<this.options.tables.length;t++) {
+        if(this.options.tables[t].tid == tid) {
+          this.options.tables[t].grid.state.re=true;
+        }
+      }
     },
 
     addTable: function(def) {
       var that = this;
 
-      var table = L.DomUtil.create('table','leaflet-control-table');
+      var grid = supagrid({
+        fields: def.fields,
+        id: def.id,
+        edit: this.options.edit,
+        data: def.layer.getLayers().map(function(l) {return l.properties;}),
+        onFocus: function(id) {
+          that.onFocus(def,id);
+        }
+      });
+      def.grid=grid;
+
+      var table = grid.el;
       table.setAttribute('rel',def.tid);
       table.style.display='none';
       def.table = table;
 
       table.onmousedown = table.ondblclick = L.DomEvent.stopPropagation;
-
-      table.innerHTML='<thead></thead><tbody></tbody>';
-
-      this.createHeader(def,table.querySelector('thead'));
-      this.createBody(def,table.querySelector('tbody'));
 
       this.inner.appendChild(table);
 
@@ -183,13 +90,14 @@ L.control.Table = L.Control.extend({
 
     activate: function(tid0) {
       this.switcher.selectedIndex=tid0;
-      var tables = this.control.querySelectorAll('table');
-      for(var i=0;i<tables.length;i++) {
-        var tid = tables[i].getAttribute('rel');
-        if(tid==tid0) {
-          tables[i].style.display='block';
+
+      for(var t=0;t<this.options.tables.length;t++) {
+        if(this.options.tables[t].tid == tid0) {
+          this.options.tables[t].table.style.display='block';
+          this.options.tables[t].grid.state.re=true;
+          console.log(this.options.tables[t].grid);
         } else {
-          tables[i].style.display='none';
+          this.options.tables[t].table.style.display='none';
         }
       }
     },
@@ -228,9 +136,6 @@ L.control.Table = L.Control.extend({
       this.switcher=switcher;
       this.control=control;
 
-      if(this.options.collapsed) {
-        this.dismiss();
-      }
 
       L.DomEvent.addListener(control, 'mouseover',function(){
         map.dragging.disable();
@@ -248,6 +153,15 @@ L.control.Table = L.Control.extend({
         this.options.tables[t].tid = t;
         this.addTable(this.options.tables[t]);
       }
+
+      var that=this;
+      setTimeout(function(){
+        if(that.options.collapsed) {
+          that.dismiss();
+        } else {
+          that.expand();
+        }
+      },2000);
 
       return control;
     }
