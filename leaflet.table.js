@@ -27,7 +27,9 @@ L.control.Table = L.Control.extend({
           } else if(l.getBounds) {
             l._map.setView(l.getBounds().getCenter());
           }
-          l.openPopup();
+          setTimeout(function(){
+            l.openPopup();
+          },1000);
         }
       });
     },
