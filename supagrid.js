@@ -139,7 +139,7 @@ var supagrid = function(options){
           grid.options.onFocus(input.getAttribute('rel'));
         }
       });
-      input.addEventListener("keypress",function(evt){
+      input.addEventListener("keydown",function(evt){
         var c = evt.keyCode;
         var k = evt.key;
         if(c == 13 || c == 40 || k == 'Enter' || k == 'Down')  {
@@ -187,7 +187,7 @@ var supagrid = function(options){
       var ok=true;
 
       for(var f in grid.filters) {
-        if(typeof data[f] == 'undefined' || !(""+ data[f]).contains(grid.filters[f])) {
+        if(typeof data[f] == 'undefined' || (""+ data[f]).indexOf(grid.filters[f]) < 0) {
           ok=false;
         }
       }
@@ -195,9 +195,38 @@ var supagrid = function(options){
       return ok;
     }
 
+    function scroller() {
+      var div = document.createElement('div');
+      div.setAttribute("class","x-scroller")
+
+      var up  = document.createElement('button');
+      up.innerHTML="\u25B2";
+      up.onclick = function() {
+        state.deltaY-=state.delta;
+        state.scroll=true;
+      };
+
+      var down  = document.createElement('button');
+      down.innerHTML="\u25BC";
+      down.onclick = function() {
+        state.deltaY+=state.delta;
+        state.scroll=true;
+      }
+
+      div.appendChild(up);
+      div.appendChild(down);
+
+      return div;
+    }
+
     function createTable() {
+      grid.container = document.createElement('div');
+
       grid.el = document.createElement("table");
       grid.el.setAttribute("class","x-supagrid");
+
+      grid.container.appendChild(grid.el);
+      grid.container.appendChild(scroller());
 
       var head = document.createElement('thead');
       var head_line = document.createElement('tr');

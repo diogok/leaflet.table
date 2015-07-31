@@ -65,7 +65,7 @@ L.control.Table = L.Control.extend({
       });
       def.grid=grid;
 
-      var table = grid.el;
+      var table = grid.container;
       table.setAttribute('rel',def.tid);
       table.style.display='none';
       def.table = table;
@@ -95,7 +95,6 @@ L.control.Table = L.Control.extend({
         if(this.options.tables[t].tid == tid0) {
           this.options.tables[t].table.style.display='block';
           this.options.tables[t].grid.state.re=true;
-          console.log(this.options.tables[t].grid);
         } else {
           this.options.tables[t].table.style.display='none';
         }

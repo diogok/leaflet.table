@@ -1,6 +1,6 @@
 
 .x-supagrid {
-  width: 98%;
+  width: 96%;
   height: 480px;
   max-height: 480px;
   max-width: 98%;
@@ -9,6 +9,15 @@
   overflow-x: scroll;
   display: block;
   table-layout: fixed;
+  float: left;
+}
+
+.x-scroller {
+  float: left;
+  padding-left: 1px;
+}
+.x-scroller button {
+  display: block;
 }
 
 .x-supagrid tr, .x-supagrid thead, .x-supagrid tbody {
