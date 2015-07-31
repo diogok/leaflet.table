@@ -8,6 +8,8 @@ L.control.Table = L.Control.extend({
         handler: {}
     },
 
+    count: 0,
+
     focus: function(def,id) {
       this.expand();
       this.activate(def.tid);
@@ -53,8 +55,11 @@ L.control.Table = L.Control.extend({
       }
     },
 
-    addTable: function(def) {
+    addTable: function(def,got) {
       var that = this;
+
+      def.tid = this.count;
+      this.count++;
 
       var grid = supagrid({
         fields: def.fields,
@@ -81,13 +86,17 @@ L.control.Table = L.Control.extend({
       option.innerHTML=def.name;
       this.switcher.appendChild(option);
 
-      if(def.tid == 0) setTimeout(function(){ that.activate(0); },1000);
+      if(def.tid == 0) setTimeout(function(){ that.activate(def.tid); },1000);
 
       def.layer.eachLayer(function(l){
         l.on('click',function(){
           that.focus(def,l.properties[def.id]);
         });
       });
+
+      if(typeof got == 'undefined' || got != true) {
+        this.options.tables.push(def);
+      }
     },
 
     activate: function(tid0) {
@@ -151,8 +160,7 @@ L.control.Table = L.Control.extend({
       },this);
 
       for(var t=0;t<this.options.tables.length;t++) {
-        this.options.tables[t].tid = t;
-        this.addTable(this.options.tables[t]);
+        this.addTable(this.options.tables[t],true);
       }
 
       var that=this;

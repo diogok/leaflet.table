@@ -274,8 +274,8 @@ var supagrid = function(options){
 
       if(typeof options.fields == 'undefined') {
         var fields =[];
-        for(var i=0;i<data.length;i++) {
-          for(var f in data[i]) {
+        for(var i=0;i<options.data.length;i++) {
+          for(var f in options.data[i]) {
             fields.push(f);
           }
         }
