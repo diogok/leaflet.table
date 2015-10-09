@@ -1,71 +1,66 @@
 
 .x-supagrid {
-  width: 98%;
-  height: 480px;
-  max-height: 480px;
   max-width: 98%;
-  border: 1px #000 solid;
-  overflow-y: hidden;
+  max-height: 98%;
   overflow-x: scroll;
   display: block;
-  table-layout: fixed;
 }
 
-.x-supagrid tr, .x-supagrid thead, .x-supagrid tbody {
+.x-supagrid .container {
+  display: table;
 }
 
-.x-supagrid thead {
-}
-
-.x-supagrid thead th {
-  height: 50px;
-  text-align: center;
-}
-
-.x-supagrid tbody {
-  position: relative;
-  margin-top: 10px;
-}
-
-.x-supagrid tbody tr {
-}
-
-.x-supagrid tbody tr td {
-  width: 200px;
-  margin: 2px;
-  border: none;
-}
-
-.x-supagrid input {
-  border: 1px #ddd solid;
-  padding: 2px;
-  width: 100%;
+.x-supagrid .body {
+  direction: rtl;
+  overflow-y: scroll;
+  max-height: 98%;
   display: block;
-  min-width: 200px;
+}
+
+.x-supagrid .head {
+  padding-left: 15px;
+  display:block;
+}
+
+.x-supagrid .body table {
+  direction: ltr;
+}
+
+.x-supagrid tr.focus td, .x-supagrid tr.focus td input {
+  background-color: #eee;
+}
+
+.x-supagrid th input {
+  display: block;
+  width: 170px;
+}
+
+.x-supagrid .head th {
+  text-align:left;
+  border-bottom: 1px #666 solid;
+  margin:0;
+  padding: 3px;
+  width: 180px;
+  min-width: 180px;
+  max-width: 180px;
+  box-sizing: border-box;
+}
+
+.x-supagrid td {
+  margin: 0;
+  padding: 0;
+  border: none;
+  width: 180px;
+  min-width: 180px;
+  max-width: 180px;
+}
+
+.x-supagrid .body input {
+  text-align:left;
+  padding: 8px;
+  width: 164px;
   box-sizing: padding-box;
+  border: none;
+  border-bottom: 1px #ccc solid;
 }
 
-.x-supagrid tbody input {
-  background-color: #ccc;
-}
-
-.x-supagrid tr.x-supagrid-focus input {
-  background-color: #efe;
-}
-
-.x-supagrid tr.x-supagrid-focus input.x-supagrid-focus{
-  border: 1px #666 solid;
-  background-color: #fff;
-}
-
-.x-supagrid tbody tr {
-  display: table-row;
-}
-
-.x-supagrid tbody tr.x-supagrid-match {
-  display: table-row;
-}
-
-.x-supagrid tbody tr.x-supagrid-not-match {
-  display: none;
-}

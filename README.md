@@ -1,120 +1,63 @@
-# Leaflet Data Table
+# Leaflet table 
 
-Work In Progress. Very experimental.
+To display a data table inside a leaflet map.
 
-Dead simple data table for leaflet layers.
-
-View index.html or [checkout the example](http://diogok.net/leaflet.table).
-
-## Features
-
-Done:
-
-- Data table overlay
-- Keyboard navigation
-- Click on line to focus marker
-- Click on marker to focus line
-- Open/close
-- Multiple tables
-- Filter
-
-Not done:
-
-- Editor
-- Two way sync between data, editor and layer
-- Add row
-- Add columns
-- Remove row
-- Remove columns
+[Check it out](http://diogok.github.io/leaflet.table).
 
 ## Usage
 
-Start with the basic Leaflet HTML:
+Use the leaflet CSS and JS
 
-```html
-<!-- Leaflet CSS and JS -->
-<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
-<script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
 
-<!-- table CSS and JS -->
-<link rel="stylesheet" href="leaflet.table.css" />
-<script src="leaflet.table.js" type="text/javascript"></script>
+Include the CSS and JS:
 
-<!-- basic style -->
-<style>
-  body {
-    margin: 0;
-    padding: 0;
-  }
-  #map {
-    width: 100vw;
-    height: 100vh;
-  }
-</style>
+    <link rel="stylesheet" href="supagrid.css" />
+    <link rel="stylesheet" href="leaflet.table.css" />
+    <script src="supagrid.js" type="text/javascript"></script>
+    <script src="leaflet.table.js" type="text/javascript"></script>
 
-<!-- leaflet container -->
-<div id="map">
-</div>
-```
+Create the map:
 
-Prepare your data:
+    <div id="map" style='width: 100vw; height: 100vh'></div>
 
-```javascript
-// start leaflet
-var map = L.map('map').setView([0, 0], 1);
-L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map);
+    <script type="text/javascript">
+      var map = L.map('map').setView([0, 0], 1);
+      L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map);
+    </script>
 
-// some demo markers
-var marker1 = new L.marker([50.50,21.21],{ });
-marker1.bindPopup('ID: 1');
-// populate the data to show on the table
-marker1.properties = {
-  id: 1,
-  foo: "bar",
-  fuz: "baz"
-};
+Use the table control:
 
-var marker2 = new L.marker([50.51,22.22],{ });
-marker2.bindPopup('ID: 2');
-// populate the data to show on the table
-marker2.properties = {
-  id: 2,
-  foo: "bar2",
-  fuz: "baz2"
-};
+    var table_control = new L.control.Table({}).addTo(map);
 
-var marker3 = new L.marker([50.53,22.23],{ });
-marker2.bindPopup('ID: 3');
-// populate the data to show on the table
-marker2.properties = {
-  id: 3,
-  foo: "bar3",
-  fuz: "baz3"
-};
+    var fields = ['id','name'];
 
-// we create a group to hold the table data
-var group = new L.layerGroup([marker1,marker2,marker3]);
-// or  group.addLayer(marker1)  and etc
-group.addTo(map);
+    var layer = new L.layerGroup();
 
-// and finally the table
-var table = L.control.table({
-  tables:[ // you can have multiple tables
-    {
-      name: "Group1", 
-      layer: group, // layer of first table
-      id: "id", // propertie that uniquely identifies each line
-      fields: ['id','foo','fuz'] // list of fields to display
+    for(var i=0;i<50;i++) { // random points
+      var marker = new L.marker([10.0+(i/100), 20.0+(i/100)]);
+      marker.properties={id:i,name:"John "+i};
+      marker.bindPopup('ID: '+marker.properties.id);
     }
-  ],
-  collapsed: true // to start collapsed
-})
 
-table.addTo(map);
-```
+    var data= layer.getFeatures().map(function(feat){return feat.properties});
 
-You can also use FeatureLayer and GeoJson layers just like LayerGroup.
+    var table = new Supagrid({
+      fields: fields,
+      id_field: fields[0],
+      data: data
+    });
 
+    layer.eachLayer(function(layer){
+      layer.on('popupopen',function(){
+        table.focus(layer.properties.id);
+      });
+    });
+
+    table_control.addTable(table.supagrid,'my_table','My Table')
+
+Take a look at the index.html for other usage.
 
 ## License
 

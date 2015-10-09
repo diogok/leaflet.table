@@ -1,273 +1,177 @@
 
-Array.prototype.unique = function() {
-  var o = {}, i, l = this.length, r = [];
-  for(i=0; i<l;i+=1) o[this[i]] = this[i];
-  for(i in o) r.push(o[i]);
-  return r;
-};
+var Supagrid = function(options){
 
-var supagrid = function(options){
+  var grid = this;
 
-    var grid = {
-      data: [],
-      filtered: [],
-      fields: [],
-      parent: null,
-      el: null,
-      options: {},
-      filters: {}
-    };
+  grid.fields=options.fields;
+  grid.data=options.data;
+  grid.element=options.element;
+  grid.id_field=options.id_field;
+  grid.on=options.on;
 
-    var state = {
-      idle: true,
-      active: false,
-      scroll: false,
-      dirty: true,
-      re: true,
-      delta: 6,
-      deltaY: 0,
-      start: 0,
-      max: 0
-    };
-
-    function render() {
-      requestAnimationFrame(render);
-      if(!state.dirty || !state.idle) return;
-      state.idle=false;
-
-      grid.el.body.innerHTML="";
-      var items=grid.filtered.slice(0);
-      for(var i=state.start;i<state.max && i<items.length;i++) {
-        var data = items[i];
-        if(typeof data == 'undefined') continue;
-
-        var line = document.createElement("tr");
-        for(var f=0;f<grid.fields.length;f++) {
-          if(typeof data[grid.fields[f]] == 'undefined') {
-            data[grid.fields[f]] = "";
-          }
-
-          var cell = document.createElement("td");
-
-          var input = document.createElement("input");
-          input.type='text';
-          input.value= data[grid.fields[f]];
-          input.setAttribute("name",grid.fields[f]);
-
-          if(grid.options.id) {
-            input.setAttribute('rel',data[grid.options.id]);
-          }
-
-          if(typeof grid.options.edit == 'undefined' || grid.options.edit != true) {
-            input.setAttribute("readonly","readonly");
-          }
-
-          fbind(input,i,f);
-
-          cell.appendChild(input);
-          line.appendChild(cell);
-        }
-        grid.el.body.appendChild(line);
+  grid.addLine = function(obj){
+    var tr=document.createElement('tr');
+    for(var f=0;f<grid.fields.length;f++) {
+      var td = document.createElement('td');
+      td.dataset.field=grid.fields[f];
+      var input = document.createElement('input');
+      input.name=grid.fields[f];
+      if(typeof obj[grid.fields[f]] == 'undefined') {
+        input.value='';
+        td.dataset.value="";
+      } else {
+        input.value=obj[grid.fields[f]];
+        td.dataset.value=obj[grid.fields[f]];
       }
+      input.onchange=function(){
+        obj[this.name]=this.value;
+      };
+      input.dataset.id=obj[grid.id_field];
+      td.appendChild(input);
+      tr.appendChild(td);
+      tr.dataset[grid.fields[f]] = obj[grid.fields[f]];
 
-      state.dirty=false;
-      state.idle=true;
-    }
-
-    function update() {
-      if(!state.active || !state.idle) return;
-      state.idle=false;
-
-      if(state.scroll || state.re) {
-        var dummy = document.createElement("tr");
-        dummy.innerHTML = "<td><input type='text' /></td>";
-        grid.el.body.appendChild(dummy);
-        var lh = dummy.clientHeight;
-        if(state.deltaY>=0){
-          state.start = Math.floor( state.deltaY / state.delta);
-          if(state.start >= grid.filtered.length) {
-            state.start = grid.filtered.length - 1;
-            state.deltaY -= state.delta;
-          }
-        } else {
-          state.start=0;
-          state.deltaY=0;
-        }
-        if(state.start <0) state.start=0;
-        state.max = Math.floor((grid.el.clientHeight)/lh) + 4 + state.start;
-        if(state.max == NaN) state.max=1;
-        state.dirty=true;
-        state.scroll=false;
-        state.re=false;
-      }
-      state.idle=true;
-    }
-
-    function focus(id) {
-      if(typeof grid.options.id == 'undefined') return;
-      
-      var items = grid.filtered.slice(0);
-      for(var i=0;i<items.length;i++) {
-        if(items[i][grid.options.id]+"" == ""+id) {
-          state.deltaY = ( i - 1 ) * state.delta;
-          state.scroll = true;
-
-          setTimeout(function(){
-            grid.el.body.querySelector("input[rel='"+id+"']").focus();
-          },1000);
-          return;
-        }
-      }
-    }
-
-    function fbind(input,x,y) {
-      function updt() {
-        grid.filtered[x][grid.fields[y]]=input.value;
-      }
-      input.addEventListener("change",updt);
-      input.addEventListener("keyup",updt);
-      input.addEventListener("keydown",updt);
-      input.addEventListener("focus",function(evt) {
-        var prevFocus = input.parentElement.parentElement.parentElement.querySelector("tr.x-supagrid-focus");
-        if(prevFocus != null) prevFocus.setAttribute('class','');
-        prevFocus = input.parentElement.parentElement.parentElement.querySelector("input.x-supagrid-focus");
-        if(prevFocus != null) prevFocus.setAttribute('class','');
-        input.parentElement.parentElement.setAttribute('class','x-supagrid-focus');
-        input.setAttribute('class','x-supagrid-focus');
-
-        if(typeof grid.options.onFocus == 'function') {
-          grid.options.onFocus(input.getAttribute('rel'));
-        }
-      });
-      input.addEventListener("keypress",function(evt){
+      input.addEventListener("keydown",function(evt){
         var c = evt.keyCode;
         var k = evt.key;
         if(c == 13 || c == 40 || k == 'Enter' || k == 'Down')  {
-          if(x + 1 == grid.filtered.length) {
-            return ;
+          var me = tr.parentNode;
+          var next = tr.nextSibling;
+          if(next) {
+            var next_input = next.querySelector('input[name="'+evt.target.name+'"]');
+            setTimeout(function(){
+              next_input.focus();
+            },200);
           }
-          state.deltaY += state.delta;
-          state.scroll = true;
-          var to_x=x-state.start+1;
-          setTimeout(function(){
-            grid.el.getElementsByTagName("input")[(to_x*grid.fields.length) + y].focus();
-          },200);
         } else if(c == 38 || k == 'Up') {
-          if( x - 1 < 0 ){
-            return;
-          }
-          var to_x=x-state.start+(state.start!=0?+1:0);
-          state.deltaY -= state.delta;
-          state.scroll = true;
           setTimeout(function(){
-            grid.el.getElementsByTagName("input")[(to_x*grid.fields.length) + y].focus();
+          var me = tr.parentNode;
+          var previous = tr.previousSibling;
+          if(previous) {
+            var previous_input = previous.querySelector('input[name="'+evt.target.name+'"]');
+            setTimeout(function(){
+              previous_input.focus();
+            },200);
+          }
           },200);
         }
       });
-    }
 
-    function bind() {
-      grid.el.addEventListener('wheel',function(evt) {
-        state.deltaY+=evt.deltaY;
-        state.scroll=true;
+      input.addEventListener('focus',function(evt){
+          grid.focus(evt.target.dataset.id,true);
+          if(typeof grid.on == 'object' && typeof grid.on.focus == 'function') {
+            grid.on.focus(evt.target.dataset.id);
+          }
       });
     }
-
-    function filter(field,val) {
-      if(val.length >= 1) {
-        grid.filters[field] =val; 
-      } else {
-        delete grid.filters[field] ;
-      }
-      grid.filtered = grid.data.filter(match);
-      state.re=true;
-    }
-
-    function match(data) {
-      var ok=true;
-
-      for(var f in grid.filters) {
-        if(typeof data[f] == 'undefined' || !(""+ data[f]).contains(grid.filters[f])) {
-          ok=false;
-        }
-      }
-
-      return ok;
-    }
-
-    function createTable() {
-      grid.el = document.createElement("table");
-      grid.el.setAttribute("class","x-supagrid");
-
-      var head = document.createElement('thead');
-      var head_line = document.createElement('tr');
-      for(var i=0;i<grid.fields.length;i++) {
-        var th = document.createElement('th');
-
-        var span  = document.createElement('span');
-        span.innerHTML = grid.fields[i];
-        th.appendChild(span);
-
-        var input = document.createElement('input');
-        th.innerHTML=grid.fields[i];
-
-        input.setAttribute("type","text");
-        input.setAttribute("name",grid.fields[i]);
-        input.addEventListener('change',function(e){
-            var input = e.currentTarget;
-            filter(input.getAttribute('name'),input.value);
-        },false);
-
-        th.appendChild(input);
-        head_line.appendChild(th);
-      }
-      head.appendChild(head_line);
-      grid.el.head = head;
-      grid.el.head.line = head_line;
-      grid.el.appendChild(head);
-
-      var body = document.createElement("tbody");
-      grid.el.body = body;
-      grid.el.appendChild(body);
-
-      if(typeof grid.parent != 'undefined') {
-        grid.parent.appendChild(grid.el);
-      }
-
-      state.active=true;
-    }
-
-    return (function(options) {
-      grid.data = options.data;
-      grid.filtered = options.data;
-      grid.parent = options.element;
-      grid.state = state;
-
-      if(typeof options.fields == 'undefined') {
-        var fields =[];
-        for(var i=0;i<data.length;i++) {
-          for(var f in data[i]) {
-            fields.push(f);
+    tbody.appendChild(tr);
+    if(typeof Object.observe == 'function') {
+      Object.observe(obj,function(changes){
+        for(var i=0;i<changes.length;i++){
+          var value = changes[i].object[changes[i].name];
+          var input=tr.querySelector('td[data-field="'+changes[i].name+'"] input');
+          if(input.value != value) {
+            input.value=value;
           }
         }
-        grid.fields = fields.unique();
-      } else {
-        grid.fields = options.fields;
+      });
+    }
+  };
+
+  grid.filter = function() {
+    var filters=[];
+    var inputs = supagrid.querySelectorAll('thead input');
+    for(var i=0;i<inputs.length;i++) {
+      if(inputs[i].value.length >= 1) {
+        filters.push([inputs[i].name,inputs[i].value]);
       }
+    }
 
-      grid.options = options;
+    var trs = table.querySelectorAll('tbody>tr');
+    for(var i=0;i<trs.length;i++) {
+      var ok =true;
 
-      createTable();
+      var tds=trs[i].querySelectorAll('td');
+      for(var t=0;t<tds.length;t++) {
+        var td_f=tds[t].dataset.field;
+        var td_v=tds[t].dataset.value;
 
-      update();
-      requestAnimationFrame(render);
-      state.updateInterval = setInterval(update,1000/30);
-      bind();
+        for(var f=0;f<filters.length;f++) {
+          if(td_f==filters[f][0]) {
+            if(td_v.indexOf(filters[f][1]) < 0) {
+              ok=false;
+            }
+          }
+        }
+      }
+      if(ok) {
+        trs[i].style.display='table-row';
+      } else {
+        trs[i].style.display='none';
+      }
+    }
+  };
 
-      grid.focus = focus;
+  grid.focus = function(id,light) {
+    var prev=body.querySelector('.focus');
+    if(prev != null) prev.classList.remove('focus');
+    var sel = 'tr[data-'+grid.id_field+'="'+id+'"]';
+    var curr=grid.supagrid.querySelector(sel);
+    if(curr != null) {
+      curr.classList.add('focus'); 
+      if(typeof light == 'undefined' || !light) curr.querySelector('input').focus();
+    }
+  };
 
-      return grid;
-    })(options);
+  var supagrid = document.createElement('div');
+  supagrid.classList.add('x-supagrid');
 
+  var container = document.createElement('div');
+  container.classList.add('container');
+
+  var table_for_head = document.createElement('table');
+  table_for_head.classList.add('head');
+  var thead = document.createElement('thead');
+  var thead_row = document.createElement('tr');
+  for(var i=0;i<grid.fields.length;i++) {
+    var th = document.createElement('th');
+    var title = document.createElement('span');
+    title.textContent=grid.fields[i];
+    var input = document.createElement('input');
+    input.name=grid.fields[i];
+    input.onchange=grid.filter;
+    th.appendChild(title);
+    th.appendChild(input);
+    thead_row.appendChild(th);
+  }
+  thead.appendChild(thead_row);
+  table_for_head.appendChild(thead);
+  container.appendChild(table_for_head);
+
+  var body = document.createElement('div');
+  body.classList.add('body');
+  var table = document.createElement('table');
+  var tbody = document.createElement('tbody');
+  for(var i=0;i<grid.data.length;i++) {
+    grid.addLine(grid.data[i]);
+  }
+  table.appendChild(tbody);
+  body.appendChild(table);
+  container.appendChild(body);
+  supagrid.appendChild(container);
+
+  grid.supagrid = supagrid;
+
+  if(typeof grid.element != 'undefined') {
+    grid.element.appendChild(supagrid);
+  }
+
+  if(typeof Array.observe == 'function') {
+    Array.observe(grid.data,function(change){
+      // TODO: array observe to add and remove lines;
+    });
+  }
+
+  return grid;
 };
 

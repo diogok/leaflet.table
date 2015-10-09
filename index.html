@@ -9,6 +9,7 @@
 
   <link rel="stylesheet" href="leaflet.table.css" />
   <link rel="stylesheet" href="supagrid.css" />
+
   <script src="supagrid.js" type="text/javascript"></script>
   <script src="leaflet.table.js" type="text/javascript"></script>
   <style>
@@ -32,15 +33,18 @@
     var map = L.map('map').setView([0, 0], 1);
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map);
 
+    // The table control
+    var table_control = new L.control.Table({}).addTo(map);
+
     // generate random data
-    var tables = [];
+    var layers = [];
     // will make 5 tables
     for(var table=0;table<5;table++) {
       var layerGroup = new L.layerGroup();
       // 100 rows per table
       for(var row=0;row<100;row++) {
         // semi-random point
-        var marker = new L.marker([ (table*10)+(row/100), (table*10)+20.0+(row/100)]);
+        var marker = new L.marker([(table*10)+(row/100), (table*10)+20.0+(row/100)]);
         // save data on marker
         // must be in properties item
         // picked an ID
@@ -56,32 +60,49 @@
       }
       // add to map
       layerGroup.addTo(map);
+      // give it a name
       layerGroup.name='layer'+table;
 
       // push to add later to the table
-      tables.push(layerGroup); 
+      layers.push(layerGroup); 
     }
 
-
-   // fields are static
+    // fields are static
     var fields = ['id'];
     for(var col=0;col<50;col++) {
       fields.push("col"+col);
     }
 
-    var table = L.control.table({
-      tables: tables.map(function(layer){
-        // each table schema
-        return {
-          name: layer.name,
-          layer: layer,
-          fields: fields,
-          id: 'id'
+    // now create the table for the layers
+    for(var i=0;i<layers.length;i++) {
+
+      var data= layers[i].getLayers().map(function(layer){
+        return layer.properties;
+      });
+
+      var table = new Supagrid({
+        id_field: 'id',
+        fields: fields,
+        data: data,
+        on: {
+          focus: function(cartodb_id) {
+            // todo: bind row click to popup
+          }
         }
-      }),
-      collapsed:false,
-      edit: false, // non editable, for now
-    }).addTo(map);
+      });
+
+      layers[i].eachLayer(function(layer){
+        // bind click to row focus
+        var my_table =table; // scope messed here
+        layer.on('popupopen',function(){
+          my_table.focus(layer.properties.id);
+        });
+      });
+
+      // add to the control
+      table_control.addTable(table.supagrid,layers[i].name,layers[i].name);
+    }
+
   </script>
 </body>
 </html>
